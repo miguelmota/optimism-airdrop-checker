@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=yes">
+  <title>Optimism Airdrop Checker</title>
+  <style>
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+
+    output {
+      display: block;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h2>
+    Check Optimism Airdrop
+  </h2>
+  <label>List of addresses</label>
+  <textarea id="input" placeholder="0x123..."></textarea>
+  <button id="submit">
+    check addresses
+  </button>
+  <output id="output"></output>
+  <script>
+    const $input = document.getElementById('input')
+    const $output = document.getElementById('output')
+    const $submit = document.getElementById('submit')
+
+    $input.value = localStorage.getItem('input') || ''
+
+    $submit.addEventListener('click', (event) => {
+      event.preventDefault()
+      check()
+    })
+
+    async function check() {
+      localStorage.setItem('input', $input.value)
+      $output.textContent = ''
+      const addresses = $input.value.trim().split('\n')
+      let output = []
+      let total = BigInt(0)
+      for (let address of addresses) {
+        address = address.trim()
+        if (!address) {
+          continue
+        }
+        const url = `https://mainnet-indexer.optimism.io/v1/airdrops/${address}`
+        const res = await fetch(url)
+        const json = await res.json()
+        if (res.status === 200) {
+          console.log(json)
+          const amount = BigInt(json.totalAmount) / (BigInt(10) ** BigInt(18))
+          total += amount
+          output.push(`${address} ${amount.toString()} OP`)
+        } else {
+          output.push(`${address} 0`)
+        }
+        $output.innerHTML = output.join('<br/>')
+      }
+      output.push(`total ${total.toString()} OP`)
+      $output.innerHTML = output.join('<br/>')
+    }
+  </script>
+  <a href="https://github.com/miguelmota/optimism-airdrop-checker" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+</body>
+</html>
